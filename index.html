@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link href="https://cdn.master.co/normal.css" rel="stylesheet" />
+    <script src="https://cdn.master.co/css"></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.2.45/vue.global.min.js"
+      integrity="sha512-Pdnl+dKWHA0jEnmhogUHlOw3FqDeujiEc3XQDkvMrPUAvytiU2cZiknw2xDPgDS+u2prg2n+6eKz3CPG588gTQ=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+  </head>
+  <body>
+    <div id="app">
+      <div
+        class="rel h:80 bg:black"
+        ref="slider"
+        @mousedown="onButtonDown"
+        @touchstart="onButtonDown"
+      >
+        <div
+          class="abs top:0 left:0 h:full bg:red"
+          :style="{ width: `${percentage * 100}%` }"
+        ></div>
+      </div>
+    </div>
+
+    <script type="module">
+      Vue.createApp({
+        data() {
+          return {
+            dragging: "80%",
+            percentage: 0,
+          };
+        },
+        methods: {
+          getClientX(event) {
+            let clientX;
+
+            if (event.type.startsWith("touch")) {
+              clientX = event.touches[0].clientX;
+            } else {
+              clientX = event.clientX;
+            }
+
+            return clientX;
+          },
+          onDragStart(event) {
+            this.dragging = true;
+
+            const clientX = this.getClientX(event);
+            const sliderSize = this.$refs.slider.clientWidth;
+            const sliderOffsetLeft =
+              this.$refs.slider.getBoundingClientRect().left;
+            this.percentage = (clientX - sliderOffsetLeft) / sliderSize;
+          },
+          onDragging(event) {
+            if (this.dragging) {
+              const clientX = this.getClientX(event);
+              const sliderSize = this.$refs.slider.clientWidth;
+              const sliderOffsetLeft =
+                this.$refs.slider.getBoundingClientRect().left;
+              let newPercent = (clientX - sliderOffsetLeft) / sliderSize;
+
+              if (newPercent < 0) {
+                newPercent = 0;
+              } else if (newPercent > 1) {
+                newPercent = 1;
+              }
+
+              this.percentage = newPercent;
+            }
+          },
+          onDragEnd() {
+            if (this.dragging) {
+              this.dragging = false;
+
+              window.removeEventListener("mousemove", this.onDragging);
+              window.removeEventListener("touchmove", this.onDragging);
+            }
+          },
+          onButtonDown(event) {
+            event.preventDefault();
+
+            this.onDragStart(event);
+
+            window.addEventListener("mousemove", this.onDragging);
+            window.addEventListener("touchmove", this.onDragging);
+            window.addEventListener("mouseup", this.onDragEnd);
+            window.addEventListener("touchend", this.onDragEnd);
+          },
+        },
+      }).mount("#app");
+    </script>
+  </body>
+</html>
